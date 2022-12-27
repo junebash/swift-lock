@@ -7,11 +7,15 @@ public struct Lock<State>: @unchecked Sendable {
 
   private let buffer: ManagedBuffer<State, PlatformLock.Primitive>
 
-  public init(unchecked state: State) {
-    buffer = LockedBuffer.create(minimumCapacity: 1) { buffer in
+  public init(uncheckedCreate: () throws -> State) rethrows {
+    buffer = try LockedBuffer.create(minimumCapacity: 1) { buffer in
       buffer.withUnsafeMutablePointerToElements { PlatformLock.initialize($0) }
-      return state
+      return try uncheckedCreate()
     }
+  }
+
+  public init(unchecked state: State) {
+    self.init(uncheckedCreate: { state })
   }
 
   public func withLock<R>(_ perform: (inout State) throws -> R) rethrows -> R {
@@ -34,6 +38,10 @@ public struct Lock<State>: @unchecked Sendable {
 extension Lock {
   public init(initialState: State) where State: Sendable {
     self.init(unchecked: initialState)
+  }
+
+  public init(create: () throws -> State) rethrows where State: Sendable {
+    try self.init(uncheckedCreate: create)
   }
 
   public init() where State == Void {
