@@ -14,11 +14,13 @@ let package = Package(
   targets: [
     .target(
       name: "Lock",
-      dependencies: []
+      dependencies: [],
+      swiftSettings: [.unsafeFlags(["-Xfrontend", "-warn-concurrency"])]
     ),
     .testTarget(
       name: "LockTests",
-      dependencies: ["Lock"]
+      dependencies: ["Lock"],
+      swiftSettings: [.unsafeFlags(["-Xfrontend", "-warn-concurrency"])]
     ),
   ]
 )
